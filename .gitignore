@@ -1,0 +1,23 @@
+# Node Modules (if used for cross-compatibility or other scripts)
+node_modules/
+
+# Deno artifacts
+deno.lock
+
+# Compiled output
+dist/
+
+# Logs and temporary files
+*.log
+*.tmp
+.DS_Store
+
+# Environment variables
+.env
+
+# Mac-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore test coverage if used
+coverage/

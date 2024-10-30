@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "lib": ["deno.ns", "dom", "esnext"],
+      "strict": true,
+      "target": "esnext"
+    },
+    "tasks": {
+      "start": "deno run src/index.ts",
+      "test": "deno test src"
+    }
+  }
+  
