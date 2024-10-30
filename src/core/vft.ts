@@ -1,6 +1,5 @@
 import * as uuid from "../utils/uuid/index.ts"
 import { normalize } from "../utils/file/path.ts"
-import { isTextFile } from "../utils/file/contentType.ts"
 import { VFSError, VFSErrorCodes as ERROR } from "../errors.ts"
 import { IndexEntry, VFTInfo } from "../types.ts"
 
@@ -86,22 +85,22 @@ export class VFT {
     private constructEntry(entry: Partial<IndexEntry>): IndexEntry {
         if (!entry.inode) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `No inode provided.`)
         if (uuid.validate(entry.inode) === false) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `Invalid inode: ${entry.inode}.`)
+        if (!entry.name) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `No name provided`)
+        if (!entry.type) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `No type provided.`)
 
         if (entry.type === "directory") {
             if (entry.external) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `A directory can not be marked external.`)
             if (entry.text) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `A directory can not contain text.`)
         }
 
-        const type = entry.type ?? (entry.text === undefined ? "directory" : "file")
-
-        if (!entry.name) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `No name provided`)
         const name = entry.name!.trim()
         if (name.length == 0 || name.length > 80) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `Invalid name length: ${entry.name}.`)
 
         const meta = entry.meta ?? {}
         const timestamp = entry.timestamp ?? (new Date()).toISOString()
 
-        if (entry.link) {
+        if (entry.type === "link" && entry.link) {
+            if (!entry.link) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `A symlink must contain a link.`)
             if (entry.link.trim().length === 0) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `Invalid link: ${entry.link}.`)
             if (entry.link.trim().length > 80) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `Invalid link length: ${entry.link}.`)
             if (entry.text) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `A symlink can not contain text.`)
@@ -113,23 +112,27 @@ export class VFT {
             return {
                 inode: entry.inode,
                 external: false,
-                type, name, parent: entry.parent, meta,
+                type: "link", 
+                name, 
+                parent: entry.parent, 
+                meta,
                 timestamp,
                 link: entry.link,
                 size: 0
             }
         }
 
-        const external = type === "file" ? (entry.external ?? !isTextFile(name)) : false
-        const text = type === "file" ? (entry.text ?? "") : undefined
+        const external = entry.type === "file" ? (entry.external ?? false) : false
+        const text = entry.type === "file" ? (entry.text ?? "") : undefined
 
         if (entry.external && !entry.size) throw VFSError(ERROR.INVALID_INDEX_ENTRY, `External files must have a size.`)
         return {
             inode: entry.inode,
-            type, name, parent: entry.parent, meta, external,
+            type: entry.type, 
+            name, parent: entry.parent, meta, external,
             text,
             timestamp,
-            children: type === "directory" ? [] : undefined,
+            children: entry.type === "directory" ? [] : undefined,
             size: entry.external ? (entry.size ?? 0) : (new TextEncoder().encode(text ?? "").length)
         }
     }
