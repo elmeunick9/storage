@@ -111,6 +111,7 @@ export interface VFSConfiguration<T extends StorageAdapterConfiguration> {
 }
 
 export interface FSTabEntry {
+    storageId: string
     configuration: VFSConfiguration<any>
     vfs: VFS<any>
     vft: VFT

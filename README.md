@@ -20,8 +20,6 @@ const vfs = createVFS({
     authentication: "none",
     storageId: 'abc123',
     access: 'read-only',
-    name: 'root',
-    mount: '/'
 })
 ```
 
@@ -30,9 +28,7 @@ File Systems created this way will automatically be mounted and added to the glo
 ```ts
 import { fstab } from 'vfs'
 
-const vfs = fstab.get({ storageId: 'abc123' })
-// or
-const vfs = fstab.get({ name: 'root' })
+const vfs = fstab.get('abc123')
 ```
 
 Note that permissions are handled at file system level. More information about a file system, such as the allocated and free space, can be extracted with `vfs.info()`. On mount if the file system is connected to a storage the index will be downloaded. At any point you can call `vfs.sync()` to force all pending changes to be sent to the storage. You can also call `vfs.watch(callback)` to observe any changes to the file system.
